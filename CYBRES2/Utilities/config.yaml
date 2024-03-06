@@ -1,0 +1,9 @@
+mysql:
+  host:               sql11.freesqldatabase.com
+  user:               sql11416324
+  passwd:             dxqn2gicwu
+  db:                 sql11416324
+experiment: # Adjust to current experiment
+  node:               rpi1
+  experiment_number:  1
+  sensors:            experimentNumber, timeStamp, MU_MM, MU_ID, temp_PCB, mag_X, mag_Y, mag_Z, temp_external, light_external, humidity_external, differential_potential_CH1, differential_potential_CH2, RF_power_emission, transpiration, air_pressure, soil_moisture, soil_temperature, Ozone_conc, Light_Complete, Light_Red, Light_Green, Light_Blue

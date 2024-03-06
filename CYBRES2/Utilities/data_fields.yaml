@@ -1,0 +1,58 @@
+# metadata
+'sender_hostname': True
+'MU_MM'     : True
+'MU_ID'     : True
+'timestamp' : False
+'sweep_freq': False
+# channel 1
+'VImax_CH1': False
+'VImin_CH1': False
+'RMS_CH1'  : False
+'Phas_CH1' : False
+'VVmax_CH1': False
+'VVmin_CH1': False
+'Corr_CH1' : False
+# channel 2
+'VImax_CH2': False
+'VImin_CH2': False
+'RMS_CH2'  : False
+'Phas_CH2' : False
+'VVmax_CH2': False
+'VVmin_CH2': False
+'Corr_CH2' : False
+# system data
+'temp-PCB'       : True
+'temp-thermostat': False
+# magnetometer and accelerometer data
+'mag_X': True
+'mag_Y': True
+'mag_Z': True
+'acc_X': False
+'acc_Y': False
+'acc_Z': False
+# external sensors
+'temp-external'    : True
+'light-external'   : True
+'humidity-external': True
+# biopotentials
+'differential_potential_CH1': True
+'differential_potential_CH2': True
+# more external sensors
+'RF_power_emission': True
+'transpiration'    : True
+'sap_flow'         : False
+'air_pressure'     : True
+'soil_moisture'    : True 
+'soil_temperature' : True
+'ambient_light'    : False
+# empty
+'empty1': False
+'empty2': False
+'empty3': False
+'empty4': False
+'empty5': False
+'empty6': False
+'empty7': False
+# reserved
+'reserved1': False
+'reserved2': False

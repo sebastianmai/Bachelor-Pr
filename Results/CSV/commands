@@ -1,0 +1,4 @@
+scp -r pi@134.34.225.53:/home/pi/Measurements /home/basti/DATEN/Universität/Bachelor/Projekt/Code/Results/CSV/PN
+scp -r pi@134.34.225.53:/home/pi/measurements /home/basti/DATEN/Universität/Bachelor/Projekt/Code/Results/CSV/CYBRES
+scp pi@134.34.225.53:/home/pi/Measurements/P5_2024-02-23 13:26:07:005.csv ~/DATEN/Universität/Bachelor/Projekt/Code/Results/CSV/PN/P5
+
