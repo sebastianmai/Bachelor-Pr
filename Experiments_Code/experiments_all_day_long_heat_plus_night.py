@@ -21,17 +21,6 @@ scaling_factors = {
 
 
 def main():
-    PN3 = PhytNode_Serial("/dev/ttyACM1", 3)
-    PN1 = PhytNode_Serial("/dev/ttyACM2",1)
-    PN_controll = PhytNode_Serial("/dev/ttyACM3",9)
-    thread_P3 = threading.Thread(target=PN3.write2csv_thread)
-    thread_P1 = threading.Thread(target=PN1.write2csv_thread)
-    thread_P_controll = threading.Thread(target=PN_controll.write2csv_thread)
-
-    thread_P3.start()
-    thread_P1.start()
-    thread_P_controll.start()
-
     WP03 = "134.34.225.167"  # 70-4F-57-FF-AE-F5
     #WP00 = "134.34.225.132"  # D8-0D-17-5c-FC-93
     plug = WP03
@@ -50,20 +39,17 @@ def main():
              (14, 30),
              (16, 40),
              (18, 50),
-             (21, 00),
-             (23, 10),
-             (1, 20),
-             (3, 30),
-             (5, 40)
         ]
 
         for hour, minute in specific_times:
             if current_time.hour == hour and minute == current_time.minute:
+                print('Time found')
                 wait_time = datetime.now()
                 start_temp = get_temp(0)
 
                 while (True):
                     current_time = datetime.now()
+
 
                     if wait_time + timedelta(minutes=60) < current_time <= wait_time + timedelta(hours=1, minutes=10):
                         current_temp = get_temp(-1)
@@ -71,15 +57,18 @@ def main():
 
                         if current_temp <= start_temp + 5:
                             growLight.turn_on()
-                            time.sleep(1)
+                            time.sleep(2)
                         elif current_temp > start_temp + 5:
                             growLight.turn_off()
-                            time.sleep(1)
+                            time.sleep(2)
                     elif wait_time + timedelta(hours=1, minutes=10) < current_time <= (wait_time + timedelta(hours=2, minutes=10)):
                         growLight.turn_off()
 
-                    if current_time == (wait_time + timedelta(hours=2, minutes=10)):
+                    if current_time >= (wait_time + timedelta(hours=2, minutes=10)):
+                        print('Broken')
                         break
+
+                print('Searching')
 
 def get_temp(position):
     folder_path = '/home/pi/measurements/'

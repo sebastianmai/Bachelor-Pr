@@ -209,7 +209,7 @@ def fast_fourier_transform(data, cybres):
         plt.xlabel('Number of samples')
         plt.ylabel('Electrical potential')
         plt.legend()
-        plt.show()
+        #plt.show()
 
     else:
         for i in range(len(data)):
