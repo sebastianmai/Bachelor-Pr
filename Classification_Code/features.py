@@ -1,10 +1,8 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import scipy.stats as stats
+from scipy.signal import welch
 from data_builder import *
 import tsfel
 import pywt
+import antropy as ant
 
 
 matplotlib.use('Qt5Agg')
@@ -16,16 +14,22 @@ def features(data, cybres):
                        "CH1_skew": [], "CH2_skew": [],
                        "CH1_kurtosis": [], "CH2_kurtosis": [],
                        "CH1_iqr": [], "CH2_iqr": [],
-                       "CH1_wpe": []}
+                       "CH1_wpe": [], "CH2_wpe": [],
+                       "CH1_mobility": [], "CH2_mobility": [],
+                       "CH1_complexity": [], "CH2_complexity": [],
+                       "CH1_asp": [], "CH2_asp": []}
     features_phyto = {"mean": [],
                       "variance": [],
                       "skew": [],
                       "kurtosis": [],
                       "iqr": [],
-                      "wpe": []}
+                      "wpe": [],
+                      "mobility": [],
+                      "complexity": [],
+                      "asp": []}
 
     if cybres:
-        for i in range(len(data)):
+        for i in range(0,1):
             data_ch1 = data[i][['timestamp', 'differential_potential_CH1']]
             data_ch2 = data[i][['timestamp', 'differential_potential_CH2']]
 
@@ -46,15 +50,20 @@ def features(data, cybres):
             features_cybres["CH2_kurtosis"].append([tsfel.kurtosis(interval)[0] for interval in intervals_CH2])
             features_cybres["CH1_iqr"].append([tsfel.interq_range(interval) for interval in intervals_CH1])
             features_cybres["CH2_iqr"].append([tsfel.interq_range(interval) for interval in intervals_CH2])
-            features_cybres["CH1_wpe"].append([wavelet_entropy(interval) for interval in intervals_CH1])
-            #features_cybres["CH2_iqr"].append([tsfel.wavelet_entropy(interval) for interval in intervals_CH2])
+            features_cybres["CH1_wpe"].append([wavelet_entropy(interval, '_CH1') for interval in intervals_CH1])
+            features_cybres["CH2_wpe"].append([wavelet_entropy(interval, '_CH2') for interval in intervals_CH2])
+            features_cybres["CH1_mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals_CH1])
+            features_cybres["CH2_mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals_CH2])
+            features_cybres["CH1_complexity"].append([ant.hjorth_params(interval, axis=0)[1][0] for interval in intervals_CH1])
+            features_cybres["CH2_complexity"].append([ant.hjorth_params(interval, axis=0)[1][0] for interval in intervals_CH2])
+            features_cybres["CH1_asp"].append([calculate_ASP(interval, '_CH1') for interval in intervals_CH1])
+            features_cybres["CH2_asp"].append([calculate_ASP(interval, '_CH2') for interval in intervals_CH2])
 
-
+            print(features_cybres)
         return features_cybres
 
-
     else:
-        for i in range(0, 2):
+        for i in range(len(data)):
             data_phyto = data[i][['timestamp', 'differential_potential']]
 
             intervals = []
@@ -66,6 +75,12 @@ def features(data, cybres):
             features_phyto["variance"].append([tsfel.calc_var(interval) for interval in intervals])
             features_cybres["skew"].append([tsfel.skewness(interval) for interval in intervals])
             features_cybres["kurtosis"].append([tsfel.kurtosis(interval) for interval in intervals])
+            features_phyto["mean"].append([tsfel.calc_mean(interval) for interval in intervals])
+            features_phyto["iqr"].append([tsfel.interq_range(interval) for interval in intervals])
+            features_cybres["wpe"].append([wavelet_entropy(interval, '') for interval in intervals])
+            features_cybres["mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals])
+            features_cybres["complexity"].append([tsfel.kurtosis(interval)[1][0] for interval in intervals])
+            features_cybres["asp"].append([calculate_ASP(interval, '') for interval in intervals])
 
         return features_phyto
 
@@ -79,10 +94,17 @@ def get_first_min_interval(data, start, ending):
     return interval
 
 
-def wavelet_entropy(signal):
-    coefficients, frequencies = pywt.dwt(signal['differential_potential_CH1'], 'db1')
+def wavelet_entropy(signal, name):
+    coefficients, frequencies = pywt.dwt(signal[f'differential_potential{name}'], 'db1')
     entropy = -np.sum((coefficients ** 2)*(np.log(coefficients**2)))
     return entropy
+
+
+def calculate_ASP(signal, name):
+    s, PSD = welch(signal[f'differential_potential{name}'], fs=0.01, nperseg=50)
+    ASP = np.sum(PSD)
+
+    return ASP
 
 
 def normalize(feature):
@@ -90,12 +112,13 @@ def normalize(feature):
 
 
 if __name__ == '__main__':
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/'
-    #home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE/measurements'
+    #home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/'
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE/measurements'
 
-    data = load_cybres(home_dir + '2-Day-test/CYBRES', False, True)
-    #data = load_cybres(home_dir, False, True)
+    #data = load_cybres(home_dir + '2-Day-test/CYBRES', False, True)
+    data = load_cybres(home_dir, False, True)
     processed_data = fast_fourier_transform(background_subtract(data, True), True)
+    #processed_data[0].to_csv('test2.csv')
     f = features(processed_data, True)
     #print(f)
 
@@ -111,7 +134,6 @@ if __name__ == '__main__':
     for index in result:
         result[index] = normalize(result[index])
 
-    print('smth')
     result.to_csv('test.csv')
 
     #result = pd.DataFrame(f)

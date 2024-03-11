@@ -2,7 +2,6 @@ import matplotlib
 import pandas as pd
 import os
 import numpy as np
-from scipy.fft import fft, fftfreq
 import matplotlib.pyplot as plt
 
 #matplotlib.use('Qt5Agg')
@@ -84,8 +83,11 @@ def get_experiments(data, cybres):
         end = start + pd.Timedelta(hours=2, minutes=10)
 
         helper = data[(data['timestamp'] >= start) & (data['timestamp'] < end)]
+        print(len(helper))
+        #Cybres: 700, 4000
+        #PN: 2000000
 
-        if len(helper) >= 700 and cybres:
+        if len(helper) >= 4000 and cybres:
             experiment.append(helper)
         elif len(helper) >= 2000000 and not cybres:
             experiment.append(helper)
@@ -283,9 +285,9 @@ def cut_length(data):
 
 if __name__ == '__main__':
     home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/'
-    data = load_cybres(home_dir + '2-Day-test/CYBRES', False, True)
-    data_sub = background_subtract(data, True)
-    print(fast_fourier_transform(data_sub, True))
+    data = load_cybres(home_dir + 'Final/HEAT/Measurements/P', False, False)
+    data_sub = background_subtract(data, False)
+    print(fast_fourier_transform(data_sub, False))
 
     #fast_fourier_transform(data, cybres=False)
 
