@@ -17,6 +17,7 @@ def main():
             growLight.turn_on()
             print('ON')
             print('')
+            #print(growLight)
             #growLight.turn_off()
             #print(growLight.state)
 

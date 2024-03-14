@@ -1,10 +1,9 @@
-from serial_class import PhytNode_Serial
-import threading
-from pyHS100 import SmartPlug
+from kasa import SmartPlug
 from datetime import datetime, timedelta
 import time
 import os
 import pandas as pd
+import asyncio
 
 
 scaling_factors = {
@@ -20,13 +19,13 @@ scaling_factors = {
 }
 
 
-def main():
+async def main():
     #WP03 = "134.34.225.167"  # 70-4F-57-FF-AE-F5
     WP00 = "134.34.225.132"  # D8-0D-17-5c-FC-93
     plug = WP00
     #plug = WP00
     growLight = SmartPlug(plug)
-    growLight.turn_off()
+    #growLight.turn_off()
 
 
     while (True):
@@ -56,21 +55,20 @@ def main():
                         print(current_temp, start_temp, start_temp + 5)
 
                         if current_temp <= start_temp + 5:
-                            if growLight.state == 'OFF':
-                                growLight.turn_on()
+                                await growLight.turn_on()
                                 time.sleep(3)
                         elif current_temp > start_temp + 5:
-                            if growLight.state == 'ON':
-                                growLight.turn_off()
+                                await growLight.turn_off()
                                 time.sleep(3)
                     elif wait_time + timedelta(hours=1, minutes=10) < current_time <= (wait_time + timedelta(hours=2, minutes=10)):
-                        growLight.turn_off()
+                        await growLight.turn_off()
 
                     if current_time >= (wait_time + timedelta(hours=2, minutes=10)):
                         print('Broken')
                         break
 
                 print('Searching')
+
 
 def get_temp(position):
     folder_path = '/home/pi/measurements/'
@@ -85,4 +83,4 @@ def get_temp(position):
     return last_temp
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

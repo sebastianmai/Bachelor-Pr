@@ -83,11 +83,11 @@ def get_experiments(data, cybres):
         end = start + pd.Timedelta(hours=2, minutes=10)
 
         helper = data[(data['timestamp'] >= start) & (data['timestamp'] < end)]
-        print(len(helper))
+        #print(len(helper))
         #Cybres: 700, 4000
         #PN: 2000000
 
-        if len(helper) >= 4000 and cybres:
+        if len(helper) >= 700 and cybres:
             experiment.append(helper)
         elif len(helper) >= 2000000 and not cybres:
             experiment.append(helper)
@@ -284,16 +284,17 @@ def cut_length(data):
 
 
 if __name__ == '__main__':
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/'
-    data = load_cybres(home_dir + 'Final/HEAT/Measurements/P', False, False)
-    data_sub = background_subtract(data, False)
-    print(fast_fourier_transform(data_sub, False))
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE'
+    #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P2', False, False)
+    #f = fast_fourier_transform(background_subtract(data, False), False)
+    #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P5', False, False)
+    #f = fast_fourier_transform(background_subtract(data, False), False)
+    #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P9', False, False)
+    #f = fast_fourier_transform(background_subtract(data, False), False)
+    data = load_cybres(home_dir + '/measurements', False, True)
+    f = fast_fourier_transform(background_subtract(data, True), True)
 
-    #fast_fourier_transform(data, cybres=False)
 
-    data2 = load_cybres(home_dir + '2-Day-test/PN/P5', False, False)
-    #data_sub = background_subtract(data2, False)
-    #print(fast_fourier_transform(data_sub, False))
 
 
 

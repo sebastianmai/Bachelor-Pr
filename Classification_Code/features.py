@@ -1,23 +1,14 @@
+import pandas as pd
 from scipy.signal import welch
 from data_builder import *
 import tsfel
 import pywt
 import antropy as ant
 
-
 matplotlib.use('Qt5Agg')
 
-def features(data, cybres):
 
-    features_cybres = {"CH1_mean": [], "CH2_mean": [],
-                       "CH1_var": [], "CH2_var": [],
-                       "CH1_skew": [], "CH2_skew": [],
-                       "CH1_kurtosis": [], "CH2_kurtosis": [],
-                       "CH1_iqr": [], "CH2_iqr": [],
-                       "CH1_wpe": [], "CH2_wpe": [],
-                       "CH1_mobility": [], "CH2_mobility": [],
-                       "CH1_complexity": [], "CH2_complexity": [],
-                       "CH1_asp": [], "CH2_asp": []}
+def features(data, cybres, channel):
     features_phyto = {"mean": [],
                       "variance": [],
                       "skew": [],
@@ -28,61 +19,32 @@ def features(data, cybres):
                       "complexity": [],
                       "asp": []}
 
-    if cybres:
-        for i in range(0,1):
-            data_ch1 = data[i][['timestamp', 'differential_potential_CH1']]
-            data_ch2 = data[i][['timestamp', 'differential_potential_CH2']]
+    for i in range(0,len(data)):
+        if cybres and channel:
+            ch = "differential_potential_CH1"
+        elif cybres and not channel:
+            ch = "differential_potential_CH2"
+        else:
+            ch = "differential_potential"
+        data_phyto = data[i][['timestamp', ch]]
 
-            intervals_CH1, intervals_CH2 = [], []
-            for start in [0, 10, 20]:
-                interval = get_first_min_interval(data_ch1, start, 10)
-                intervals_CH1.append(interval)
-                interval = get_first_min_interval(data_ch2, start, 10)
-                intervals_CH2.append(interval)
+        intervals = []
+        for start in [0, 10, 20]:
+            interval = get_first_min_interval(data_phyto, start, 10)
+            intervals.append(interval)
 
-            features_cybres["CH1_mean"].append([tsfel.calc_mean(interval) for interval in intervals_CH1])
-            features_cybres["CH2_mean"].append([tsfel.calc_mean(interval) for interval in intervals_CH2])
-            features_cybres["CH1_var"].append([np.var(interval['differential_potential_CH1'], axis=0) for interval in intervals_CH1])  # needed np.var since TSFEL doesnt allow axis specification resulting in depreciation warnings
-            features_cybres["CH2_var"].append([np.var(interval['differential_potential_CH2'], axis=0) for interval in intervals_CH2])  # needed np.var since TSFEL doesnt allow axis specification resulting in depreciation warnings
-            features_cybres["CH1_skew"].append([tsfel.skewness(interval)[0] for interval in intervals_CH1])
-            features_cybres["CH2_skew"].append([tsfel.skewness(interval)[0]for interval in intervals_CH2])
-            features_cybres["CH1_kurtosis"].append([tsfel.kurtosis(interval)[0] for interval in intervals_CH1])
-            features_cybres["CH2_kurtosis"].append([tsfel.kurtosis(interval)[0] for interval in intervals_CH2])
-            features_cybres["CH1_iqr"].append([tsfel.interq_range(interval) for interval in intervals_CH1])
-            features_cybres["CH2_iqr"].append([tsfel.interq_range(interval) for interval in intervals_CH2])
-            features_cybres["CH1_wpe"].append([wavelet_entropy(interval, '_CH1') for interval in intervals_CH1])
-            features_cybres["CH2_wpe"].append([wavelet_entropy(interval, '_CH2') for interval in intervals_CH2])
-            features_cybres["CH1_mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals_CH1])
-            features_cybres["CH2_mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals_CH2])
-            features_cybres["CH1_complexity"].append([ant.hjorth_params(interval, axis=0)[1][0] for interval in intervals_CH1])
-            features_cybres["CH2_complexity"].append([ant.hjorth_params(interval, axis=0)[1][0] for interval in intervals_CH2])
-            features_cybres["CH1_asp"].append([calculate_ASP(interval, '_CH1') for interval in intervals_CH1])
-            features_cybres["CH2_asp"].append([calculate_ASP(interval, '_CH2') for interval in intervals_CH2])
+        features_phyto["mean"].append([tsfel.calc_mean(interval) for interval in intervals])
+        features_phyto["variance"].append(
+            [np.var(interval[ch], axis=0) for interval in intervals])
+        features_phyto["skew"].append([tsfel.skewness(interval)[0] for interval in intervals])
+        features_phyto["kurtosis"].append([tsfel.kurtosis(interval)[0] for interval in intervals])
+        features_phyto["iqr"].append([tsfel.interq_range(interval) for interval in intervals])
+        features_phyto["wpe"].append([wavelet_entropy(interval, ch) for interval in intervals])
+        features_phyto["mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals])
+        features_phyto["complexity"].append([ant.hjorth_params(interval, axis=0)[1][0] for interval in intervals])
+        features_phyto["asp"].append([calculate_ASP(interval, ch) for interval in intervals])
 
-            print(features_cybres)
-        return features_cybres
-
-    else:
-        for i in range(len(data)):
-            data_phyto = data[i][['timestamp', 'differential_potential']]
-
-            intervals = []
-            for start in [0, 10, 20]:
-                interval = get_first_min_interval(data_phyto, start, 10)
-                intervals.append(interval)
-
-            features_phyto["mean"].append([tsfel.calc_mean(interval) for interval in intervals])
-            features_phyto["variance"].append([tsfel.calc_var(interval) for interval in intervals])
-            features_cybres["skew"].append([tsfel.skewness(interval) for interval in intervals])
-            features_cybres["kurtosis"].append([tsfel.kurtosis(interval) for interval in intervals])
-            features_phyto["mean"].append([tsfel.calc_mean(interval) for interval in intervals])
-            features_phyto["iqr"].append([tsfel.interq_range(interval) for interval in intervals])
-            features_cybres["wpe"].append([wavelet_entropy(interval, '') for interval in intervals])
-            features_cybres["mobility"].append([ant.hjorth_params(interval, axis=0)[0][0] for interval in intervals])
-            features_cybres["complexity"].append([tsfel.kurtosis(interval)[1][0] for interval in intervals])
-            features_cybres["asp"].append([calculate_ASP(interval, '') for interval in intervals])
-
-        return features_phyto
+    return features_phyto
 
 
 def get_first_min_interval(data, start, ending):
@@ -95,13 +57,13 @@ def get_first_min_interval(data, start, ending):
 
 
 def wavelet_entropy(signal, name):
-    coefficients, frequencies = pywt.dwt(signal[f'differential_potential{name}'], 'db1')
-    entropy = -np.sum((coefficients ** 2)*(np.log(coefficients**2)))
+    coefficients, frequencies = pywt.dwt(signal[name], 'db1')
+    entropy = -np.sum((coefficients ** 2) * (np.log(coefficients ** 2)))
     return entropy
 
 
 def calculate_ASP(signal, name):
-    s, PSD = welch(signal[f'differential_potential{name}'], fs=0.01, nperseg=50)
+    s, PSD = welch(signal[name], fs=280, nperseg=50)
     ASP = np.sum(PSD)
 
     return ASP
@@ -112,57 +74,42 @@ def normalize(feature):
 
 
 if __name__ == '__main__':
-    #home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/'
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE/measurements'
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE'
+    # data = load_cybres(home_dir + '/Measurements/P2', False, False)
+    # f = features(fast_fourier_transform(background_subtract(data, False), False), False)
+    data = load_cybres(home_dir + '/measurements', False, True)
+    f_CH1 = features(fast_fourier_transform(background_subtract(data, True), True), True, False)
 
-    #data = load_cybres(home_dir + '2-Day-test/CYBRES', False, True)
-    data = load_cybres(home_dir, False, True)
-    processed_data = fast_fourier_transform(background_subtract(data, True), True)
-    #processed_data[0].to_csv('test2.csv')
-    f = features(processed_data, True)
-    #print(f)
 
     res = []
-    for column in f:
+    for column in f_CH1:
         columns = []
         for i in [0, 1, 2]:
             columns.append(f"{column}_{i}")
-        res.append(pd.DataFrame(f[column], columns=[columns]))
-
+        res.append(pd.DataFrame(f_CH1[column], columns=[columns]))
     result = pd.concat(res, axis=1)
 
+    # normalize
     for index in result:
         result[index] = normalize(result[index])
 
-    result.to_csv('test.csv')
+    #bring it into the correc tformat for classification
+    keys = result.columns.get_level_values(0)
+    combined = pd.DataFrame()
 
-    #result = pd.DataFrame(f)
-    #result.to_csv("test.csv")
+    for i in range(0, len(keys), 3):
+        val = []
+        for j in range(len(result)):
+            val.extend([result.iloc[j, i], result.iloc[j, i + 1], result.iloc[j, i + 2]])
+        column_name = keys[i].replace("_0", "")
+        combined[column_name] = val
 
-    #print(f['CH1_mean'])
-    mean = normalize(pd.DataFrame(f['CH1_mean']))
-    mean2 = normalize(pd.DataFrame(f['CH2_mean']))
+    # add class column
+    class_col = [i % 3 for i in range(len(combined))]
+    combined['class'] = class_col[:len(combined)]
 
-    #print(f['CH1_var'])
-    var = normalize(pd.DataFrame(f['CH1_var']))
-    var2 = normalize(pd.DataFrame(f['CH2_var']))
+    combined.to_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH2.csv')
 
-    kurtosis = normalize(pd.DataFrame(f['CH1_kurtosis']))
-    kurtosis2 = normalize(pd.DataFrame(f['CH2_kurtosis']))
-
-    #print(normalize(mean))
-
-    #print(processed_data)
-
-    #dataP5 = load_cybres(home_dir + '2-Day-test/PN/P5', False, False)
-    #processed_data2 = background_subtract(data2, False)
-
-
-    #print(mean(processed_data2, False))
-
-
-    #print(f['CH1_mean'])
-    #print(f['CH1_wpe'])
 
     '''
     plt.figure(figsize=(10, 5))
