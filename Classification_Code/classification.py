@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.inspection import DecisionBoundaryDisplay
+from sklearn.ensemble import AdaBoostClassifier
 import matplotlib.colors
 
 matplotlib.use('Qt5Agg')
@@ -16,12 +17,13 @@ def lda(data, classes):
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
+
 
     clf = LDA()
     sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
-    #sfs = RFE(clf, n_features_to_select=classes)
-    #sfs = RFECV(clf,  scoring='accuracy')
+    #sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
@@ -40,14 +42,15 @@ def lda(data, classes):
         plot_best_two(classify, X, sfs, feature_names)
 
 
-def knn(data):
+def knn(data, classes):
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
 
     clf = KNeighborsClassifier(n_neighbors=3)
-    sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=2)
+    #sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
@@ -59,10 +62,41 @@ def knn(data):
     cm = confusion_matrix(y_test, prediction)
     acc = accuracy_score(y_test, prediction)
 
-    #print(acc)
+    print(acc, feature_names)
 
     plot_confusion_matrix(cm)
 
+    if classes == 2:
+        plot_best_two(classify, X, sfs, feature_names)
+
+def adaclassify(data, classes):
+    X = data.iloc[:, :-1]
+    y = data.iloc[:, -1]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
+    print(len(X_test))
+
+    clf = AdaBoostClassifier(algorithm='SAMME')
+    #sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
+    selected_train = sfs.fit_transform(X_train, y_train)
+
+    feature_names = sfs.get_feature_names_out()
+
+
+    classify = clf.fit(selected_train, y_train)
+    prediction = clf.predict(sfs.transform(X_test))
+
+
+    cm = confusion_matrix(y_test, prediction)
+    acc = accuracy_score(y_test, prediction)
+
+    print(acc, feature_names)
+
+    plot_confusion_matrix(cm)
+
+    if classes == 2:
+        plot_best_two(classify, X, sfs, feature_names)
 
 def custom_cmap():
     return matplotlib.colors.ListedColormap(["lightsalmon", "lightskyblue", "lightgreen"])
@@ -91,12 +125,25 @@ def plot_best_two(classify, X, sfs, feature_names):
         disp.ax_.scatter(int3[i][0], int3[i][1], marker='1', color='green', label='poststimuli' if i == 0 else "", s=100)
     plt.xlabel(feature_names[0])
     plt.ylabel(feature_names[1])
-    plt.legend(bbox_to_anchor=(0.7, 0.8), loc='upper left')
+    plt.legend(bbox_to_anchor=(0.71, 1.0), loc='upper left')
     plt.show()
 
 if __name__ == '__main__':
-    d = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH1.csv',
+    CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH1.csv',
                        usecols=range(1, 11))
-    lda(d, 1)
-    #knn(data)
+    CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH2.csv',
+                       usecols=range(1, 11))
+    P5 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/Phyto_BLUE_P5.csv',
+                       usecols=range(1, 11))
+    P9 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/Phyto_BLUE_P9.csv',
+                       usecols=range(1, 11))
 
+
+    result = pd.concat([CH1, CH2, P5, P9], ignore_index=True)
+    #result = CH2
+    print(print(result))
+
+    num = 1
+    lda(result, num)
+    knn(result, num)
+    adaclassify(result, num)

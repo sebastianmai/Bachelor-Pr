@@ -1,17 +1,18 @@
 from serial_class import PhytNode_Serial
 import threading
-from pyHS100 import SmartPlug
+from kasa import SmartPlug
 from datetime import datetime, timedelta
 import time
+import asyncio
 
 
-def main():
-    WP03 = "134.34.225.167"  # 70-4F-57-FF-AE-F5
-    # WP00 = "134.34.225.132"  # D8-0D-17-5c-FC-93
-    plug = WP03
-    # plug = WP00
+async def main():
+    #WP03 = "134.34.225.167"  # 70-4F-57-FF-AE-F5
+    WP00 = "134.34.225.132"  # D8-0D-17-5c-FC-93
+    plug = WP00
+    # plug = WP03
     growLight = SmartPlug(plug)
-    growLight.turn_off()
+    await growLight.turn_off()
 
     while (True):
         current_time = datetime.now()
@@ -36,14 +37,14 @@ def main():
                         current_time = datetime.now()
 
                         if wait_time + timedelta(minutes=60) < current_time <= wait_time + timedelta(hours=1, minutes=10):
-                            growLight.turn_on()
+                            await growLight.turn_on()
                         elif wait_time + timedelta(hours=1, minutes=10) < current_time < (
                                 wait_time + timedelta(hours=2, minutes=10)):
-                            growLight.turn_off()
+                            await growLight.turn_off()
 
                         if current_time >= (wait_time + timedelta(hours=2, minutes=10)):
                             break
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

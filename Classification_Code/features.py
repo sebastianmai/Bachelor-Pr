@@ -74,11 +74,11 @@ def normalize(feature):
 
 
 if __name__ == '__main__':
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE'
-    # data = load_cybres(home_dir + '/Measurements/P2', False, False)
-    # f = features(fast_fourier_transform(background_subtract(data, False), False), False)
-    data = load_cybres(home_dir + '/measurements', False, True)
-    f_CH1 = features(fast_fourier_transform(background_subtract(data, True), True), True, False)
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/HEAT'
+    data = load_cybres(home_dir + '/Measurements/P5', False, False)
+    f = f_CH1 = features(fast_fourier_transform(background_subtract(data, False), False), False, False)
+    #data = load_cybres(home_dir + '/measurements', False, True)
+    #f_CH1 = features(fast_fourier_transform(background_subtract(data, True), True), True, False)
 
 
     res = []
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     for index in result:
         result[index] = normalize(result[index])
 
-    #bring it into the correc tformat for classification
+    #bring it into the correct format for classification
     keys = result.columns.get_level_values(0)
     combined = pd.DataFrame()
 
@@ -108,48 +108,5 @@ if __name__ == '__main__':
     class_col = [i % 3 for i in range(len(combined))]
     combined['class'] = class_col[:len(combined)]
 
-    combined.to_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH2.csv')
+    combined.to_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/HEAT/Phyto_BLUE_P5.csv')
 
-
-    '''
-    plt.figure(figsize=(10, 5))
-    plt.scatter(mean[0], var[0], color='blue', label='Pre CH1')
-    plt.scatter(mean2[0], var2[0], color='red', label='Pre CH2')
-    plt.scatter(mean[1], var[1], color='blue', label='Stim CH1', marker='x')
-    plt.scatter(mean2[1], var2[1], color='red', label='Stim CH2', marker='x')
-    plt.scatter(mean[2], var[2], color='blue', label='Post CH1', marker='^')
-    plt.scatter(mean2[2], var2[2], color='red', label='Post CH2', marker='^')
-    plt.xlabel("mean")
-    plt.ylabel("variance")
-    plt.legend()
-    plt.grid(True)
-    #plt.show()
-
-
-    plt.figure(figsize=(10, 5))
-    plt.scatter(kurtosis[0], var[0], color='blue', label='Pre CH1')
-    plt.scatter(kurtosis2[0], var2[0], color='red', label='Pre CH2')
-    plt.scatter(kurtosis[1], var[1], color='blue', label='Stim CH1', marker='x')
-    plt.scatter(kurtosis2[1], var2[1], color='red', label='Stim CH2', marker='x')
-    plt.scatter(kurtosis[2], var[2], color='blue', label='Post CH1', marker='^')
-    plt.scatter(kurtosis2[2], var2[2], color='red', label='Post CH2', marker='^')
-    plt.xlabel("kurtosis")
-    plt.ylabel("variance")
-    plt.legend()
-    plt.grid(True)
-    #plt.show()
-
-    plt.figure(figsize=(10, 5))
-    plt.scatter(kurtosis[0], mean[0], color='blue', label='Pre CH1')
-    plt.scatter(kurtosis2[0], mean2[0], color='blue', label='Pre CH2')
-    plt.scatter(kurtosis[1], mean[1], color='red', label='Stim CH1', marker='x')
-    plt.scatter(kurtosis2[1], mean2[1], color='red', label='Stim CH2', marker='x')
-    plt.scatter(kurtosis[2], mean[2], color='green', label='Post CH1', marker='^')
-    plt.scatter(kurtosis2[2], mean2[2], color='green', label='Post CH2', marker='^')
-    plt.xlabel("kurtosis")
-    plt.ylabel("mean")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-    
-    '''
