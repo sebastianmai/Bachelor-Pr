@@ -15,29 +15,35 @@ import numpy as np
 
 
 def lda(data, classes, direction):
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
+
+    """
+    Function that classifies the data using linear discriminant analysis
+    """
+
+    X = data.iloc[:, :-1]  # data values
+    y = data.iloc[:, -1]   # data classes
 
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)  # create train/test split
 
 
     clf = LDA()
-    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)  # use of SFS/SBS
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
 
     classify = clf.fit(selected_train, y_train)
-    prediction = clf.predict(sfs.transform(X_test))
+    prediction = clf.predict(sfs.transform(X_test))  # prediction by LDA on the data with only the selected features
 
-    cm = confusion_matrix(y_test, prediction)
-    acc = accuracy_score(y_test, prediction)
+    cm = confusion_matrix(y_test, prediction)   # calculate the confusion matrix
+    acc = accuracy_score(y_test, prediction)    # calculate the accuracy
 
     print(acc, feature_names)
 
     acc = round(acc, 4)
 
+    # plotting
     if direction == "forward":
         plot_confusion_matrix(cm, feature_names, "LDA", "SFS", classes, acc)
     else:
@@ -49,30 +55,35 @@ def lda(data, classes, direction):
         else:
             plot_best_two(classify, X, sfs, feature_names, "LDA", "SFS_Back")
 
-
 def knn(data, classes, direction):
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
+    """
+    Function that classifies the data using k-nearest neighbors
+    """
+
+    X = data.iloc[:, :-1]   # data values
+    y = data.iloc[:, -1]    # data classes
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)  # create train/test split
 
     clf = KNeighborsClassifier(n_neighbors=3)
-    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)  # use of SFS/SBS
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
 
 
     classify = clf.fit(selected_train, y_train)
-    prediction = clf.predict(sfs.transform(X_test))
+    prediction = clf.predict(sfs.transform(X_test))  # prediction by KNN on the data with only the selected features
 
-    cm = confusion_matrix(y_test, prediction)
-    acc = accuracy_score(y_test, prediction)
+    cm = confusion_matrix(y_test, prediction)  # calculate the confusion matrix
+    acc = accuracy_score(y_test, prediction)  # calculate the accuracy
 
     print(acc, feature_names)
 
     acc = round(acc, 4)
 
+    # plotting
     if direction == "forward":
         plot_confusion_matrix(cm, feature_names, "KNN", "SFS", classes, acc)
     else:
@@ -84,7 +95,11 @@ def knn(data, classes, direction):
         else:
             plot_best_two(classify, X, sfs, feature_names, "KNN", "SFS_Back")
 
+
 def adaclassify(data, classes, direction):
+
+
+
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
@@ -131,7 +146,7 @@ def plot_confusion_matrix(cm, feature_names, name, direction, classes, acc):
     for elem in feature_names:
         s = s + "_" + elem
 
-    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/PLOTS/ALL_SB/{name}/{direction}/{classes}_features_{acc}{s}.pdf", format='pdf')
+    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/PLOTS/ALL_SB/{name}/{direction}/{classes}_features_{acc}{s}.pdf", format='pdf')
 
     #plt.show()
     plt.close()
@@ -145,7 +160,7 @@ def plot_best_two(classify, X, sfs, feature_names, name, direction):
 
     eps = 0.1
 
-    disp = DecisionBoundaryDisplay.from_estimator(classify, sfs.transform(X), grid_resolution=2000, response_method="predict", cmap=custom_cmap())
+    disp = DecisionBoundaryDisplay.from_estimator(classify, sfs.transform(X), grid_resolution=2, response_method="predict", cmap=custom_cmap())
     disp.ax_.set_xlim([X[feature_names[0]].min() - eps, X[feature_names[0]].max() + eps])
     disp.ax_.set_ylim([X[feature_names[1]].min() - eps, X[feature_names[1]].max() + eps])
     for i in range(len(int1)):
@@ -155,24 +170,23 @@ def plot_best_two(classify, X, sfs, feature_names, name, direction):
     plt.xlabel(feature_names[0])
     plt.ylabel(feature_names[1])
     plt.legend(bbox_to_anchor=(0.71, 1.0), loc='upper left')
-    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/PLOTS/ALL_SB/{name}/{direction}/best_two.pdf", format='pdf')
+    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/PLOTS/ALL_SB/{name}/{direction}/best_two.pdf", format='pdf')
     #plt.show()
     plt.close()
 
 
 
 if __name__ == '__main__':
-    CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/CYBRES_WIND_CH1.csv',
+    CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/CYBRES_RED_CH1.csv',
                        usecols=range(1, 11))
-    CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/CYBRES_WIND_CH2.csv',
+    CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/CYBRES_RED_CH2.csv',
                        usecols=range(1, 11))
-    P5 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P5.csv',
+    P5 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/Phyto_RED_P5.csv',
                        usecols=range(1, 11))
-    P9 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P9.csv',
+    P9 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/Phyto_RED_P9.csv',
                        usecols=range(1, 11))
 
-    print(CH1.keys())
-    '''
+
     # interleaf the columns
     for key in CH1.columns:
         CH1 = CH1.rename(columns={key: f"{key}_s"})
@@ -189,9 +203,10 @@ if __name__ == '__main__':
 
     combined2 = combined2[order].drop(columns=['class_b']).rename(columns={'class_s': 'class'})
 
-    #result = combined
-    result = pd.concat([combined, combined2], ignore_index=True)'''
+    #result = combined2
+    result = pd.concat([combined, combined2], ignore_index=True)
 
+    '''
     class_pre = CH1.iloc[::3]
     CH1.drop(CH1.index[::3], inplace=True)
 
@@ -200,22 +215,24 @@ if __name__ == '__main__':
 
     class_pre = class_pre.sample(n=length_classes).reset_index(drop=True)
     result = class_pre
-    #result = pd.concat([CH1, CH2], ignore_index=True)
-    print(result)
-
     '''
-    dir = "backward"
-    for i in range(1, 9):
-        num = i
 
+
+    #result = pd.concat([CH1, CH2], ignore_index=True)
+    #print(lda(result, 19, "backward"))
+
+
+    dir = "backward"
+    for i in range(9, 18):
+        num = i
         lda(result, num, dir)
         knn(result, num, dir)
         adaclassify(result, num, dir)
 
     dir = "forward"
-    for i in range(1, 9):
+    for i in range(9, 18):
         num = i
 
         lda(result, num, dir)
         knn(result, num, dir)
-        adaclassify(result, num, dir)'''
+        adaclassify(result, num, dir)
