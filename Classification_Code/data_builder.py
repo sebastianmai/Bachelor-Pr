@@ -87,7 +87,7 @@ def get_experiments(data, cybres):
         #Cybres: 700, 4000
         #PN: 2000000
 
-        if len(helper) >= 700 and cybres:
+        if len(helper) >= 4000 and cybres:
             experiment.append(helper)
         elif len(helper) >= 2000000 and not cybres:
             experiment.append(helper)
@@ -158,6 +158,7 @@ def background_subtract(data, cybres):
 
     return interval_data
 
+
 def fast_fourier_transform(data, cybres):
 
     """
@@ -166,16 +167,17 @@ def fast_fourier_transform(data, cybres):
     back into the data.
     """
 
-    fft1, fft2 , freq = [], [], []
+    fft1, fft2, freq = [], [], []
 
     if cybres:
         for i in range(len(data)):
             length = len(data[i]['differential_potential_CH1'])
-            sampling_rate = 0.1
+            #0.8, 0.1
+            sampling_rate = 0.8  # sampling rate of the CYBRES
             freq.append(np.fft.rfftfreq(length, 1/sampling_rate))
-            fft1.append(np.fft.rfft(data[i]['differential_potential_CH1']))
+            fft1.append(np.fft.rfft(data[i]['differential_potential_CH1']))  # calculate the FFT
             fft2.append(np.fft.rfft(data[i]['differential_potential_CH2']))
-        fft1 = remove_hz(fft1, freq, True)
+        fft1 = remove_hz(fft1, freq, True) # remove the corresponding frequencies
         fft2 = remove_hz(fft2, freq, True)
 
         '''
@@ -187,18 +189,19 @@ def fast_fourier_transform(data, cybres):
         transform_CH1, transform_CH2 = [], []
 
         for i in range(len(fft1)):
-            transform_CH1.append(np.fft.irfft(fft1[i], n=len(data[i]['differential_potential_CH1'])))
+            transform_CH1.append(np.fft.irfft(fft1[i], n=len(data[i]['differential_potential_CH1'])))  # calculate the inverse FFT
             transform_CH2.append(np.fft.irfft(fft2[i], n=len(data[i]['differential_potential_CH2'])))
 
         '''
         plt.figure(figsize=(10, 5))
         plt.plot(transform_CH1[0])
         plt.plot(transform_CH2[0])
-        plt.plot(np.arange(len(data[0])), data[0]['differential_potential_CH1'])
-        plt.plot(np.arange(len(data[0])), data[0]['differential_potential_CH2'])
-        plt.show()
-        '''
+        plt.plot(np.arange(len(data[1])), data[1]['differential_potential_CH1'])
+        plt.plot(np.arange(len(data[1])), data[1]['differential_potential_CH2'])
+        plt.show()'''
 
+
+        '''
         plt.figure(figsize=(10, 5))
         plt.title('Raw and Transformed Data for CH1 and CH2 of the CYBRES Sensor')
         plt.plot(np.arange(178), data[1]['differential_potential_CH1'].iloc[60:238], label='CH1')
@@ -206,28 +209,48 @@ def fast_fourier_transform(data, cybres):
 
         data_trans = to_df(data, transform_CH1, transform_CH2, True)
 
+
         plt.plot(np.arange(len(data_trans[1])), data_trans[1]['differential_potential_CH1'], label='Transformed CH1')
         plt.plot(np.arange(len(data_trans[1])), data_trans[1]['differential_potential_CH2'], label='Transformed CH2')
         plt.xlabel('Number of samples')
         plt.ylabel('Electrical potential')
         plt.legend()
-        #plt.show()
+        plt.show()
+        '''
+        '''
+        plt.figure(figsize=(10, 5))
+        plt.title('Raw and Transformed Data for CH1 and CH2 of the CYBRES Sensor')
+        plt.plot(np.arange(1041), data[0]['differential_potential_CH1'].iloc[346:1387], label='CH1')
+        plt.plot(np.arange(1041), data[0]['differential_potential_CH2'].iloc[346:1387], label='CH2')'''
+
+        data_trans = to_df(data, transform_CH1, transform_CH2, True)  # transformation back to df with correct interval length
+
+        '''
+        plt.plot(np.arange(len(data_trans[0])), data_trans[0]['differential_potential_CH1'], label='Transformed CH1')
+        plt.plot(np.arange(len(data_trans[0])), data_trans[0]['differential_potential_CH2'], label='Transformed CH2')
+        plt.axvline(x=347, color='purple', linestyle='--')
+        plt.axvline(x=694, color='purple', linestyle='--')
+        plt.xlabel('Number of samples')
+        plt.ylabel('Electrical potential')
+        plt.legend()
+        plt.show()'''
 
     else:
+        # the same procedure but for the phytonodes
         for i in range(len(data)):
             length = len(data[i]['differential_potential'])
-            sampling_rate = 280
+            sampling_rate = 280  # sampling rate of the phytonode
             freq.append(np.fft.rfftfreq(length, 1/sampling_rate))
-            fft1.append(np.fft.rfft(data[i]['differential_potential']))
+            fft1.append(np.fft.rfft(data[i]['differential_potential']))  # calculate the FFT
 
-        fft1 = remove_hz(fft1, freq, False)
+        fft1 = remove_hz(fft1, freq, False)  # remove the corresponding frequencies
 
         transform = []
 
         for i in range(len(fft1)):
-            transform.append(np.fft.irfft(fft1[i], n=len(data[i]['differential_potential'])))
+            transform.append(np.fft.irfft(fft1[i], n=len(data[i]['differential_potential'])))  # calculate the inverse FFT
 
-        data_trans = to_df(data, transform, None, False)
+        data_trans = to_df(data, transform, None, False) # transformation back to df with correct interval length
 
     return data_trans
 
@@ -237,9 +260,9 @@ def remove_hz(fft, freq, cybres):
     """
     helper function to remove the undesired frequencies from the dataset
     """
-
+    #0.15, 0.01
     if cybres:
-        cut = 0.006
+        cut = 0.15
     else:
         cut = 25
 
@@ -269,7 +292,8 @@ def to_df(data_original, data_transformed_1, data_transformed_2, cybres):
 def cut_length(data):
 
     """
-    helper function which cuts the data to 30 min interval
+    helper function which cuts the data to 30 min interval. This is since our FFT uses a bigger interval to reduce error at the start
+    and end of the signal due to lacking periodicity
     """
 
     interval = []
@@ -284,15 +308,15 @@ def cut_length(data):
 
 
 if __name__ == '__main__':
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/BLUE'
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/RED'
     #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P2', False, False)
     #f = fast_fourier_transform(background_subtract(data, False), False)
     #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P5', False, False)
     #f = fast_fourier_transform(background_subtract(data, False), False)
     #data = load_cybres(home_dir + 'Final/HEAT/Measurements/P9', False, False)
     #f = fast_fourier_transform(background_subtract(data, False), False)
-    data = load_cybres(home_dir + '/measurements', False, True)
-    f = fast_fourier_transform(background_subtract(data, True), True)
+    #data = load_cybres(home_dir + '/measurements', False, True)
+    #f = fast_fourier_transform(background_subtract(data, True), True)
 
 
 

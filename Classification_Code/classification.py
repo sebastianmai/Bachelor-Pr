@@ -9,11 +9,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.ensemble import AdaBoostClassifier
 import matplotlib.colors
+import numpy as np
 
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
 
 
-def lda(data, classes):
+def lda(data, classes, direction):
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
@@ -22,8 +23,7 @@ def lda(data, classes):
 
 
     clf = LDA()
-    sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
-    #sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
@@ -36,21 +36,28 @@ def lda(data, classes):
 
     print(acc, feature_names)
 
-    plot_confusion_matrix(cm)
+    acc = round(acc, 4)
+
+    if direction == "forward":
+        plot_confusion_matrix(cm, feature_names, "LDA", "SFS", classes, acc)
+    else:
+        plot_confusion_matrix(cm, feature_names, "LDA", "SFS_Back", classes, acc)
 
     if classes == 2:
-        plot_best_two(classify, X, sfs, feature_names)
+        if direction == "forward":
+            plot_best_two(classify, X, sfs, feature_names, "LDA", "SFS")
+        else:
+            plot_best_two(classify, X, sfs, feature_names, "LDA", "SFS_Back")
 
 
-def knn(data, classes):
+def knn(data, classes, direction):
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=3, stratify=y, shuffle=True)
 
     clf = KNeighborsClassifier(n_neighbors=3)
-    #sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
-    sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
@@ -64,12 +71,20 @@ def knn(data, classes):
 
     print(acc, feature_names)
 
-    plot_confusion_matrix(cm)
+    acc = round(acc, 4)
+
+    if direction == "forward":
+        plot_confusion_matrix(cm, feature_names, "KNN", "SFS", classes, acc)
+    else:
+        plot_confusion_matrix(cm, feature_names, "KNN", "SFS_Back", classes, acc)
 
     if classes == 2:
-        plot_best_two(classify, X, sfs, feature_names)
+        if direction == "forward":
+            plot_best_two(classify, X, sfs, feature_names, "KNN", "SFS")
+        else:
+            plot_best_two(classify, X, sfs, feature_names, "KNN", "SFS_Back")
 
-def adaclassify(data, classes):
+def adaclassify(data, classes, direction):
     X = data.iloc[:, :-1]
     y = data.iloc[:, -1]
 
@@ -77,8 +92,7 @@ def adaclassify(data, classes):
     print(len(X_test))
 
     clf = AdaBoostClassifier(algorithm='SAMME')
-    #sfs = SequentialFeatureSelector(clf, direction="forward", n_features_to_select=classes)
-    sfs = SequentialFeatureSelector(clf, direction="backward", n_features_to_select=classes)
+    sfs = SequentialFeatureSelector(clf, direction=direction, n_features_to_select=classes)
     selected_train = sfs.fit_transform(X_train, y_train)
 
     feature_names = sfs.get_feature_names_out()
@@ -93,21 +107,36 @@ def adaclassify(data, classes):
 
     print(acc, feature_names)
 
-    plot_confusion_matrix(cm)
+    acc = round(acc, 4)
+
+    if direction == "forward":
+        plot_confusion_matrix(cm, feature_names, "ADA", "SFS", classes, acc)
+    else:
+        plot_confusion_matrix(cm, feature_names, "ADA", "SFS_Back", classes, acc)
 
     if classes == 2:
-        plot_best_two(classify, X, sfs, feature_names)
-
+        if direction == "forward":
+            plot_best_two(classify, X, sfs, feature_names, "ADA", "SFS")
+        else:
+            plot_best_two(classify, X, sfs, feature_names, "ADA", "SFS_Back")
 def custom_cmap():
     return matplotlib.colors.ListedColormap(["lightsalmon", "lightskyblue", "lightgreen"])
 
-def plot_confusion_matrix(cm):
+def plot_confusion_matrix(cm, feature_names, name, direction, classes, acc):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["prestimuli", "stimuli", "poststimuli"])
     disp.plot(cmap='Purples')
     plt.tight_layout()
-    plt.show()
 
-def plot_best_two(classify, X, sfs, feature_names):
+    s = ""
+    for elem in feature_names:
+        s = s + "_" + elem
+
+    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/PLOTS/ALL_SB/{name}/{direction}/{classes}_features_{acc}{s}.pdf", format='pdf')
+
+    #plt.show()
+    plt.close()
+
+def plot_best_two(classify, X, sfs, feature_names, name, direction):
     int1, int2, int3 = [], [], []
     for i in range(0, len(X), 3):
         int1.append(((X[feature_names[0]][i]), (X[feature_names[1]][i])))
@@ -126,24 +155,67 @@ def plot_best_two(classify, X, sfs, feature_names):
     plt.xlabel(feature_names[0])
     plt.ylabel(feature_names[1])
     plt.legend(bbox_to_anchor=(0.71, 1.0), loc='upper left')
-    plt.show()
+    plt.savefig(f"/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/PLOTS/ALL_SB/{name}/{direction}/best_two.pdf", format='pdf')
+    #plt.show()
+    plt.close()
+
+
 
 if __name__ == '__main__':
-    CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH1.csv',
+    CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/CYBRES_WIND_CH1.csv',
                        usecols=range(1, 11))
-    CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH2.csv',
+    CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/CYBRES_WIND_CH2.csv',
                        usecols=range(1, 11))
-    P5 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/Phyto_BLUE_P5.csv',
+    P5 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P5.csv',
                        usecols=range(1, 11))
-    P9 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/Phyto_BLUE_P9.csv',
+    P9 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P9.csv',
                        usecols=range(1, 11))
 
+    print(CH1.keys())
+    '''
+    # interleaf the columns
+    for key in CH1.columns:
+        CH1 = CH1.rename(columns={key: f"{key}_s"})
+        CH2 = CH2.rename(columns={key: f"{key}_b"})
+        P9 = P9.rename(columns={key: f"{key}_s"})
+        P5 = P5.rename(columns={key: f"{key}_b"})
 
-    result = pd.concat([CH1, CH2, P5, P9], ignore_index=True)
-    #result = CH2
-    print(print(result))
+    combined = pd.concat((CH1, CH2), axis=1)
+    order = np.array(list(zip(CH1.columns, CH2.columns))).flatten()
+    combined = combined[order].drop(columns=['class_b']).rename(columns={'class_s': 'class'})
 
-    num = 1
-    lda(result, num)
-    knn(result, num)
-    adaclassify(result, num)
+    combined2 = pd.concat((P9, P5), axis=1)
+    order = np.array(list(zip(P9.columns, P5.columns))).flatten()
+
+    combined2 = combined2[order].drop(columns=['class_b']).rename(columns={'class_s': 'class'})
+
+    #result = combined
+    result = pd.concat([combined, combined2], ignore_index=True)'''
+
+    class_pre = CH1.iloc[::3]
+    CH1.drop(CH1.index[::3], inplace=True)
+
+    CH1.reset_index(drop=True, inplace=True)
+    length_classes = len(CH1.iloc[::2])
+
+    class_pre = class_pre.sample(n=length_classes).reset_index(drop=True)
+    result = class_pre
+    #result = pd.concat([CH1, CH2], ignore_index=True)
+    print(result)
+
+    '''
+    dir = "backward"
+    for i in range(1, 9):
+        num = i
+
+        lda(result, num, dir)
+        knn(result, num, dir)
+        adaclassify(result, num, dir)
+
+    dir = "forward"
+    for i in range(1, 9):
+        num = i
+
+        lda(result, num, dir)
+        knn(result, num, dir)
+        adaclassify(result, num, dir)'''

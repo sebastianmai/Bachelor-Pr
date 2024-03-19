@@ -9,6 +9,11 @@ matplotlib.use('Qt5Agg')
 
 
 def features(data, cybres, channel):
+
+    """
+    This function calculates the features for the prestimuli, stimuli and poststimuli part and returns them.
+    """
+
     features_phyto = {"mean": [],
                       "variance": [],
                       "skew": [],
@@ -26,13 +31,14 @@ def features(data, cybres, channel):
             ch = "differential_potential_CH2"
         else:
             ch = "differential_potential"
-        data_phyto = data[i][['timestamp', ch]]
+        data_phyto = data[i][['timestamp', ch]]  # relevant data
 
         intervals = []
         for start in [0, 10, 20]:
-            interval = get_first_min_interval(data_phyto, start, 10)
+            interval = get_first_min_interval(data_phyto, start, 10)  # assign the data to the three intervals
             intervals.append(interval)
 
+        # for each interval and for all data points within it calculate the features and add them to the dictionary
         features_phyto["mean"].append([tsfel.calc_mean(interval) for interval in intervals])
         features_phyto["variance"].append(
             [np.var(interval[ch], axis=0) for interval in intervals])
@@ -48,6 +54,11 @@ def features(data, cybres, channel):
 
 
 def get_first_min_interval(data, start, ending):
+
+    """
+    helper function to assign data points to the three intervals
+    """
+
     date = data['timestamp'].iloc[0].replace(second=0, microsecond=0)
     start = date + pd.Timedelta(minutes=start)
     end = start + pd.Timedelta(minutes=ending)
@@ -57,12 +68,22 @@ def get_first_min_interval(data, start, ending):
 
 
 def wavelet_entropy(signal, name):
+
+    """
+    Function to calculate the Wavelet entropy using a discrete wavelet
+    """
+
     coefficients, frequencies = pywt.dwt(signal[name], 'db1')
     entropy = -np.sum((coefficients ** 2) * (np.log(coefficients ** 2)))
     return entropy
 
 
 def calculate_ASP(signal, name):
+
+    """
+    Function to calculate the ASP using  welch approximation
+    """
+
     s, PSD = welch(signal[name], fs=280, nperseg=50)
     ASP = np.sum(PSD)
 
@@ -70,17 +91,22 @@ def calculate_ASP(signal, name):
 
 
 def normalize(feature):
+
+    """
+    function to normalize the features
+    """
+
     return (feature - feature.min()) / (feature.max() - feature.min())
 
 
 if __name__ == '__main__':
-    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/HEAT'
-    data = load_cybres(home_dir + '/Measurements/P5', False, False)
-    f = f_CH1 = features(fast_fourier_transform(background_subtract(data, False), False), False, False)
-    #data = load_cybres(home_dir + '/measurements', False, True)
-    #f_CH1 = features(fast_fourier_transform(background_subtract(data, True), True), True, False)
+    home_dir = '/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Results/CSV/Final/WIND'
+    #data = load_cybres(home_dir + '/Measurements/P5', False, False)
+    #f_CH1 = features(fast_fourier_transform(background_subtract(data, False), False), False, False)
+    data = load_cybres(home_dir + '/measurements', False, True)
+    f_CH1 = features(fast_fourier_transform(background_subtract(data, True), True), True, False)
 
-
+    # put each interval of each feature in a column to easily normalize
     res = []
     for column in f_CH1:
         columns = []
@@ -89,11 +115,11 @@ if __name__ == '__main__':
         res.append(pd.DataFrame(f_CH1[column], columns=[columns]))
     result = pd.concat(res, axis=1)
 
-    # normalize
+    # normalize the columns
     for index in result:
         result[index] = normalize(result[index])
 
-    #bring it into the correct format for classification
+    # bring it into the correct format for classification
     keys = result.columns.get_level_values(0)
     combined = pd.DataFrame()
 
@@ -108,5 +134,5 @@ if __name__ == '__main__':
     class_col = [i % 3 for i in range(len(combined))]
     combined['class'] = class_col[:len(combined)]
 
-    combined.to_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/HEAT/Phyto_BLUE_P5.csv')
+    #combined.to_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/CYBRES_WIND_CH2.csv')
 
