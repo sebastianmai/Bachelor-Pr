@@ -63,8 +63,8 @@ def lda(data, classes, direction):
 
     if classes == 2:
 
-        plot_best_two(classify, X, sfs, feature_names, "LDA", "SFS_Back")
-        '''
+        #plot_best_two(classify, X, sfs, feature_names, "LDA", "SFS_Back")
+
         trans = sfs.transform(X_test)
 
         plt.contourf(xx, yy, zz, cmap="viridis", alpha=0.7)
@@ -100,7 +100,7 @@ def lda(data, classes, direction):
     if direction == "forward":
         plot_confusion_matrix(cm, feature_names, "LDA", "SFS", classes, acc)
     else:
-        plot_confusion_matrix(cm, feature_names, "LDA", "SFS_Back", classes, acc)'''
+        plot_confusion_matrix(cm, feature_names, "LDA", "SFS_Back", classes, acc)
 
 def knn(data, classes, direction):
 
@@ -149,10 +149,8 @@ def knn(data, classes, direction):
 
 
     if classes == 2:
-        plot_best_two(classify, X, sfs, feature_names, "KNN", "SFS")
+        #plot_best_two(classify, X, sfs, feature_names, "KNN", "SFS")
 
-
-        '''
         trans = sfs.transform(X_test)
 
         plt.contourf(xx, yy, zz, cmap="viridis", alpha=0.7)
@@ -181,13 +179,13 @@ def knn(data, classes, direction):
             plt.savefig(
                 f"/home/bastimai/Data/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/PLOTS/ALL/{name}/SFS_Back/best_two2.pdf",
                 format='pdf')
-            plt.close()'''
+            plt.close()
 
-    '''
+
     if direction == "forward":
         plot_confusion_matrix(cm, feature_names, "KNN", "SFS", classes, acc)
     else:
-        plot_confusion_matrix(cm, feature_names, "KNN", "SFS_Back", classes, acc)'''
+        plot_confusion_matrix(cm, feature_names, "KNN", "SFS_Back", classes, acc)
 
 
 
@@ -320,6 +318,11 @@ def plot_best_two(classify, X, sfs, feature_names, name, direction):
 
 
 def combining(CH1, CH2, P5, P9):
+
+    """
+    Function that combines that interleaves the columns. Depending on the channel combination either return combined, combined2 or result
+    """
+
     for key in CH1.columns:
         CH1 = CH1.rename(columns={key: f"{key}_s"})
         CH2 = CH2.rename(columns={key: f"{key}_b"})
@@ -342,6 +345,7 @@ def combining(CH1, CH2, P5, P9):
 
 if __name__ == '__main__':
 
+    # read the features datasets:
     CH1 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH1.csv',
                        usecols=range(1, 11))
     CH2 = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/BLUE/CYBRES_BLUE_CH2.csv',
@@ -359,7 +363,7 @@ if __name__ == '__main__':
                        usecols=range(1, 11))
     P9_RED = pd.read_csv('/home/basti/DATEN/Universität/Bachelor/Projekt/Bachelor-Pr/Features/RED/Phyto_RED_P9.csv',
                        usecols=range(1, 11))
-    '''
+
     CH1_HEAT = pd.read_csv('/home/bastimai/Data/Universität/Bachelor/Projekt/Bachelor-Pr/Features/HEAT/CYBRES_HEAT_CH1.csv',
                        usecols=range(1, 11))
     CH2_HEAT = pd.read_csv('/home/bastimai/Data/Universität/Bachelor/Projekt/Bachelor-Pr/Features/HEAT/CYBRES_HEAT_CH2.csv',
@@ -376,17 +380,12 @@ if __name__ == '__main__':
     P5_WIND = pd.read_csv('/home/bastimai/Data/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P5.csv',
                        usecols=range(1, 11))
     P9_WIND = pd.read_csv('/home/bastimai/Data/Universität/Bachelor/Projekt/Bachelor-Pr/Features/WIND/Phyto_WIND_P9.csv',
-                       usecols=range(1, 11))'''
-
-    result = combining(CH1, CH2, P5, P9)
-    print(result)
-    lda(result, 2, "backward")
+                       usecols=range(1, 11))
 
 
 
-    '''
+    # calculating the prestimuli dataset
     combine_blue = combining(CH1, CH2, P5, P9)
-    #combine_blue['class'].replace({1: 2, 2: 1}, inplace=True)
     combine_red = combining(CH1_RED, CH2_RED, P5_RED, P9_RED)
     combine_red['class'].replace({1: 3, 2: 4}, inplace=True)
     combine_heat = combining(CH1_HEAT, CH2_HEAT, P5_HEAT, P9_HEAT)
@@ -394,14 +393,15 @@ if __name__ == '__main__':
     combine_wind = combining(CH1_WIND, CH2_WIND, P5_WIND, P9_WIND)
     combine_wind['class'].replace({1: 7, 2: 8}, inplace=True)
 
-    #, combine_heat, combine_wind
+    #combine blue, red, heat and wind datasets
     helper = pd.concat([combine_blue, combine_red, combine_heat, combine_wind], ignore_index=True)
     helper.drop(helper.index[::3], inplace=True)
 
 
-    unique_test, counts_test = np.unique(helper['class'], return_counts=True)
-    class_counts_test = dict(zip(unique_test, counts_test))
-    print(class_counts_test)
+    class_pre = helper.iloc[::3]
+    length_classes = min(helper['class'].value_counts())
+    class_pre = class_pre.sample(n=length_classes, random_state=42).reset_index(drop=True)
+    class_pre.to_csv('class_pre_P5_P9.csv', index=False)
 
 
     class_pre_CH1_CH2 = pd.read_csv('class_pre_CH1_CH2.csv')
@@ -410,23 +410,13 @@ if __name__ == '__main__':
     class_pre = class_pre_P5_P9
     #class_pre = pd.concat([class_pre_CH1_CH2, class_pre_P5_P9], ignore_index=True)
 
-    unique_test, counts_test = np.unique(class_pre['class'], return_counts=True)
-    class_counts_test = dict(zip(unique_test, counts_test))
-    print(class_counts_test)
 
     result = pd.concat([helper, class_pre], ignore_index=True)
 
-    print(result)
-    unique_test, counts_test = np.unique(result['class'], return_counts=True)
-    class_counts_test = dict(zip(unique_test, counts_test))
-    print(class_counts_test)'''
 
-    '''
-    class_pre = helper.iloc[::3]
-    length_classes = min(helper['class'].value_counts())
-    class_pre = class_pre.sample(n=length_classes, random_state=42).reset_index(drop=True)
-    class_pre.to_csv('class_pre_P5_P9.csv', index=False)'''
-    '''
+
+
+    # doing the classification
     dir = "backward"
     for i in range(1, 18):
         num = i
@@ -440,4 +430,4 @@ if __name__ == '__main__':
 
         lda(result, num, dir)
         knn(result, num, dir)
-        adaclassify(result, num, dir)'''
+        adaclassify(result, num, dir)
